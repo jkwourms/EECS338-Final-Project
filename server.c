@@ -7,8 +7,10 @@
 #include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
+#include <pthread.h>
 #define BUFFER_SIZE 256
 
+void *chef();
 
 void error(const char *msg) {
     perror(msg);
@@ -21,6 +23,8 @@ int main(int argc, char *argv[]) {
 	char buffer[BUFFER_SIZE];
 	struct sockaddr_in serv_addr, cust_addr;
 	int order;
+	pthread_t tid;
+
 	if (argc < 2) {
 		fprintf(stderr, "ERROR: did not provide port number");
 		exit(1);
@@ -41,17 +45,32 @@ int main(int argc, char *argv[]) {
 	if (newsockfd < 0)
 		error("ERROR: accept");
 	bzero(buffer, BUFFER_SIZE);
-	order = read(newsockfd, buffer, BUFFER_SIZE-1);
-	if (order < 0)
-		error("ERROR: reading from socket");
-	printf("Your order was : %s\n", buffer);
 
-	order = write(newsockfd, "I got your order", 16);
-	if (order < 0)
-		error("ERROR: writing to socket");
+	//continue to read orders until number of customers is 0
+	
+	pthread_create(&tid, NULL, chef, NULL); //launch chef thread
+	
 	close(newsockfd);
 	close(sockfd);
+	pthread_join(tid, NULL);
 	return 0;
 }
 
+void *chef() {
+	
+	order = read(newsockfd, buffer, BUFFER_SIZE-1);
+        if (order < 0)
+                error("ERROR: reading from socket");
+	
+	printf("Your order was : %s\n", buffer);
+	order = write(newsockfd, "I got your order", 16);
+	if (order < 0)
+		error("ERROR: writing to socket");
+	if (strcmp(order, "cheese")) {
+		printf("sleeping...")
+		sleep(2);
+		printf("awake!");
+	}
+	pthread_exit(0);
 
+}
