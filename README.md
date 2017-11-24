@@ -10,3 +10,4 @@ prepare each order (different times for different ingredients). When the server 
 * Customers are clients that submit menu requests w/ different ingredients
 * Server launches a chef thread that takes time depending on what ingredients were ordered
 * When server quits, it prints a log of all orders
+* Also said to make client/server communication socket based, since customers can arrive at any time
