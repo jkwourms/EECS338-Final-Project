@@ -11,3 +11,8 @@ prepare each order (different times for different ingredients). When the server 
 * Server launches a chef thread that takes time depending on what ingredients were ordered
 * When server quits, it prints a log of all orders
 * Also said to make client/server communication socket based, since customers can arrive at any time
+
+# Add...
+* fprintf all the options for orders
+* change loop to process where a random number of customers arrive & place orders
+* chef sleeps depending on order
