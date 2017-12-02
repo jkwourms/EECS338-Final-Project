@@ -45,6 +45,11 @@ int main(int argc, char *argv[]) {
 	custlen = sizeof(cust_addr);
 
 	//Accept connection
+	/* THE ISSUE
+	** for some reason this is only printing out one thread
+	** we need to make sure a thread pops up for each customer.
+	** I think it's the while statement??
+	*/
 	while (client_sock = accept(sockfd, (struct sockaddr *) &cust_addr, &custlen)) {
 		pthread_t tid;
 		new_sock = malloc(sizeof *new_sock);
