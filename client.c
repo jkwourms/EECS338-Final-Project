@@ -1,68 +1,60 @@
-/* client */
-
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <string.h>
-#include <sys/types.h>
+#include <unistd.h>
+#include <sys/types.h> 
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <netdb.h>
-#define BUFFER_SIZE 100
+#include <netdb.h> 
+#include <math.h>
 
-void error(const char *msg) {
+#define PORT_NUMBER 9383
+
+// Helper function for error messages (not required)
+void error(const char *msg)
+{
     perror(msg);
     exit(0);
 }
 
-int main(int argc, char *argv[]) {
-    int sockfd, portnum, order;
+int main(int argc, char *argv[])
+{
+	// Prepare for socket communication
+    int sockfd, portno = PORT_NUMBER, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[BUFFER_SIZE];
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
-       exit(0);
-    }
-
-    //Create socket
-    portnum = atoi(argv[2]);
+    char buffer[256];
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         error("ERROR opening socket");
-    server = gethostbyname(argv[1]);
+    server = gethostbyname("127.0.0.1");
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
     }
     bzero((char *) &serv_addr, sizeof(serv_addr));
     serv_addr.sin_family = AF_INET;
-    bcopy((char *)server->h_addr, 
-         (char *)&serv_addr.sin_addr.s_addr,
-         server->h_length);
-    serv_addr.sin_port = htons(portnum);
-
-    //Connect 
+    bcopy((char *)server->h_addr, (char *)&serv_addr.sin_addr.s_addr, server->h_length);
+    serv_addr.sin_port = htons(portno);
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
-    
-    //Continue placing orders until # of customers is 0
-    for (int i = 0; i < 2; i++) {
-        printf("Please enter your order: ");
-        bzero(buffer,BUFFER_SIZE);
-        fgets(buffer,BUFFER_SIZE-1,stdin);
-        order = write(sockfd,buffer,strlen(buffer));
-        if (order < 0) 
-             error("ERROR writing to socket");
-        bzero(buffer,BUFFER_SIZE);
-        order = read(sockfd,buffer,BUFFER_SIZE-1);
-        if (order < 0) 
-             error("ERROR reading from socket");
-        printf("%s\n",buffer);
-    }
-    
+
+    for (int i = 0; i < 4; i++) {
+
+        // Receive message from server
+        n = read(sockfd, buffer, sizeof(buffer));
+        if (n < 0) error("ERROR reading from socket");
+        printf("Customer received: %s\n", buffer);
+
+        // Get order and send to server
+        bzero(buffer, sizeof(buffer));
+        gets(buffer);
+        n = write(sockfd, buffer, strlen(buffer));
+        if (n < 0) error("ERROR writing to socket");
+
+    }	
+    sleep(2);
+	// Cleanup
     close(sockfd);
     return 0;
 }
-
-
