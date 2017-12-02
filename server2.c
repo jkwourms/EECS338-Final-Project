@@ -1,4 +1,7 @@
-/* server */
+/* server 
+** to run : ./server 8000
+*/
+
 
 #include <stdio.h>
 #include <stdlib.h>
