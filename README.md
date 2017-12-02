@@ -5,14 +5,12 @@ Ok so Chris had some major edits:
 requests) to a server. The server launches a separate thread that's a chef, while continuing to take orders. The chef takes time to
 prepare each order (different times for different ingredients). When the server finally quits, it prints a log of all the orders."
 
-# So...
-* Making a server/client program now
-* Customers are clients that submit menu requests w/ different ingredients
-* Server launches a chef thread that takes time depending on what ingredients were ordered
-* When server quits, it prints a log of all orders
-* Also said to make client/server communication socket based, since customers can arrive at any time
+# Tasks to do
+* Print out all menu options for customers to choose from (in client)
+* Associate a sleep value with each ingredient item in menu option (in server)
+* Server launches a chef thread & sleeps depending on ingredient
+* Print a message back to customer saying their order is ready (print actual menu order name
++ order #)
+* Save order in another buffer (in server)
+* Print out log of orders after last customer receives their food (from new buffer)
 
-# Add...
-* fprintf all the options for orders
-* change loop to process where a random number of customers arrive & place orders
-* chef sleeps depending on order
