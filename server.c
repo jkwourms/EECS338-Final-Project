@@ -18,11 +18,11 @@ void error(const char *msg) {
 }
 
 int main(int argc, char *argv[]) {
-	int sockfd, newsockfd, portnum;
+	int sockfd, client_sock, portnum;
+	int *new_sock;
 	char buffer[BUFFER_SIZE];
 	socklen_t custlen;
 	struct sockaddr_in serv_addr, cust_addr;
-	pthread_t tid;
 	if (argc < 2) {
 		fprintf(stderr, "ERROR: did not provide port number");
 		exit(1);
@@ -45,15 +45,15 @@ int main(int argc, char *argv[]) {
 	custlen = sizeof(cust_addr);
 
 	//Accept connection
-	while (newsockfd = accept(sockfd, (struct sockaddr *) &cust_addr, &custlen)) {
-		if (pthread_create(&tid, NULL, chef, &newsockfd) < 0)
+	while (client_sock = accept(sockfd, (struct sockaddr *) &cust_addr, &custlen)) {
+		pthread_t tid;
+		new_sock = malloc(sizeof *new_sock);
+		*new_sock = client_sock;
+		if (pthread_create(&tid, NULL, chef, (void*) new_sock) < 0)
 			error("ERROR: could not create thread");
 	}
 
-	//Close sockets & join threads
-	close(newsockfd);
-	close(sockfd);
-	pthread_join(tid, NULL);
+	//pthread_join(tid, NULL);
 	return 0;
 }
 
@@ -64,15 +64,12 @@ void *chef(void *sockfd) {
 	int read_size;
 	char *order, customer_order[100];
 
-	//Send message to the customer
-	order = "Please place your order: ";
-	write(sock, order, strlen(order));
-
 	//Receive message from customer
 	while ((read_size = recv(sock, customer_order, 100, 0)) > 0) {
 		//End of string marker
 		customer_order[read_size] = '\0';
 		//Send message back to customer
+		sprintf(customer_order, "Your order was processed by : %d", getpid());
 		write(sock, customer_order, strlen(customer_order));
 		//Clear message buffer
 		//bzero(buffer, 100)
@@ -81,9 +78,12 @@ void *chef(void *sockfd) {
 	if (read_size == 0) {
 		printf("Thank you, come again!");
 		fflush(stdout);
+		close(sock);
+		//not exiting?
+		//pthread_exit(0);
 	}
-
-   	close(sock);
-	pthread_exit(0);
-
+	free(sockfd);
+	close(sock);
+	pthread_exit(NULL);
+	return 0;
 }
