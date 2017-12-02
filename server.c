@@ -1,94 +1,114 @@
-/* server */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#define BUFFER_SIZE 256
-
-void *chef(void *);
-
-void error(const char *msg) {
-    perror(msg);
-    exit(1);
+/*
+    C socket server example, handles multiple clients using threads
+    Compile
+    gcc server.c -lpthread -o server
+*/
+ 
+#include<stdio.h>
+#include<string.h>    
+#include<stdlib.h>    
+#include<sys/socket.h>
+#include<arpa/inet.h> 
+#include<unistd.h>    
+#include<pthread.h> 
+ 
+//the thread function
+void *connection_handler(void *);
+ 
+int main(int argc , char *argv[])
+{
+    int socket_desc , client_sock , c;
+    struct sockaddr_in server , client;
+     
+    //Create socket
+    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+    if (socket_desc == -1)
+    {
+        printf("Could not create socket");
+    }
+    puts("Socket created");
+     
+    //Prepare the sockaddr_in structure
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons( 8000 );
+     
+    //Bind
+    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        //print the error message
+        perror("bind failed. Error");
+        return 1;
+    }
+    puts("bind done");
+     
+    //Listen
+    listen(socket_desc , 3);
+     
+    //Accept and incoming connection
+    puts("Waiting for hungry customers...");
+    c = sizeof(struct sockaddr_in);
+    pthread_t thread_id;
+    
+    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    {
+        puts("Connection accepted");
+         
+        if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
+        {
+            perror("could not create thread");
+            return 1;
+        }
+         
+        //Now join the thread , so that we dont terminate before the thread
+        //pthread_join( thread_id , NULL);
+        puts("Handler assigned");
+    }
+     
+    if (client_sock < 0)
+    {
+        perror("accept failed");
+        return 1;
+    }
+     
+    return 0;
 }
-
-int main(int argc, char *argv[]) {
-	int sockfd, client_sock, portnum;
-	int *new_sock;
-	char buffer[BUFFER_SIZE];
-	socklen_t custlen;
-	struct sockaddr_in serv_addr, cust_addr;
-	if (argc < 2) {
-		fprintf(stderr, "ERROR: did not provide port number");
-		exit(1);
-	}
-
-	//Create Socket
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0)
-		error("ERROR: opening socket");
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	portnum = atoi(argv[1]);
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(portnum);
-	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-		error("ERROR: binding");
-
-	//Listen for connection
-	listen(sockfd, 5);
-	custlen = sizeof(cust_addr);
-
-	//Accept connection
-	/* THE ISSUE
-	** for some reason this is only printing out one thread
-	** we need to make sure a thread pops up for each customer.
-	** I think it's the while statement??
-	*/
-	while (client_sock = accept(sockfd, (struct sockaddr *) &cust_addr, &custlen)) {
-		pthread_t tid;
-		new_sock = malloc(sizeof *new_sock);
-		*new_sock = client_sock;
-		if (pthread_create(&tid, NULL, chef, (void*) new_sock) < 0)
-			error("ERROR: could not create thread");
-	}
-
-	//pthread_join(tid, NULL);
-	return 0;
-}
-
-void *chef(void *sockfd) {
-	
-	//Get socket descriptor
-	int sock = *(int*)sockfd;
-	int read_size;
-	char *order, customer_order[100];
-
-	//Receive message from customer
-	while ((read_size = recv(sock, customer_order, 100, 0)) > 0) {
-		//End of string marker
-		customer_order[read_size] = '\0';
-		//Send message back to customer
-		sprintf(customer_order, "Your order was processed by : %d", getpid());
-		write(sock, customer_order, strlen(customer_order));
-		//Clear message buffer
-		//bzero(buffer, 100)
-	}
-
-	if (read_size == 0) {
-		printf("Thank you, come again!");
-		fflush(stdout);
-		close(sock);
-		//not exiting?
-		//pthread_exit(0);
-	}
-	free(sockfd);
-	close(sock);
-	pthread_exit(NULL);
-	return 0;
-}
+ 
+/*
+ * This will handle connection for each client
+ * */
+void *connection_handler(void *socket_desc)
+{
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[2000];
+     
+    message = "Welcome! Please place your order: \n";
+    write(sock , message , strlen(message));
+     
+    //Receive a message from client
+    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    {
+        //end of string marker
+        client_message[read_size] = '\0';
+        
+        //Send the message back to client
+        write(sock , client_message , strlen(client_message));
+        
+        //clear the message buffer
+        memset(client_message, 0, 2000);
+    }
+     
+    if(read_size == 0)
+    {
+        puts("Client disconnected");
+        fflush(stdout);
+    }
+    else if(read_size == -1)
+    {
+        perror("recv failed");
+    }
+         
+    return 0;
+} 
