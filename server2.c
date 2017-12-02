@@ -1,7 +1,4 @@
-/* server 
-** to run : ./server 8000
-*/
-
+/* server */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -62,16 +59,22 @@ int main(int argc, char *argv[]) {
 }
 
 void *chef(void *sockfd) {
-	
+	char total_order_buffer[BUFFER_SIZE];
+
 	//Get socket descriptor
 	int orderNumber;
 	int sock = *(int*)sockfd;
 	int read_size;
 	char *order, customer_order[100];
+	const char *toppings[5];
 
 	//Send message to the customer
-	toppings = "Blueberries, strawberries, granola, coconut shavings, banana"
-	write(sock, toppings, strlen(toppings));
+	toppings[0] = "Blueberries";
+	toppings[1] = "Strawberries";
+	toppings[2] = "Granola";
+	toppings[3] = "Coconut shavings";
+	toppings[4] = "Banana";
+	write(sock, toppings, 6);
 	order = "Please choose your toppings: ";
 	write(sock, order, strlen(order));
 
@@ -82,26 +85,26 @@ void *chef(void *sockfd) {
 			//add time to chef
 			sleep(3);
 		} 
-		else if (strcmp(customer_order, "strawberries") == 0){
+		else if (strcmp(customer_order, "Strawberries") == 0){
 			//add time to chef
 			sleep(2);
 		}
-		else if (strcmp(customer_order, "granola") == 0){
+		else if (strcmp(customer_order, "Granola") == 0){
 			//add time to chef
 			sleep(2);
 		}
-		else if (strcmp(customer_order, "coconut shavings") == 0){
+		else if (strcmp(customer_order, "Coconut shavings") == 0){
 			//add time to chef
 			sleep(10);
 		}
-		else if (strcmp(customer_order, "banana") == 0){
+		else if (strcmp(customer_order, "Banana") == 0){
 			//add time to chef
 			sleep(5);
 		}
 		else {
-			bzero(buffer, sizeof(buffer));
-			sprintf(buffer, "Please list valid ingredients.");
-			printf("Customer did not input valid ingredients. \n"); fflush(stdout);
+			bzero(total_order_buffer, BUFFER_SIZE);
+			printf("Please list valid ingredients.");
+			fflush(stdout);
 		}
 		
 		orderNumber++;
@@ -115,12 +118,12 @@ void *chef(void *sockfd) {
 		//Clear message buffer
 		//bzero(buffer, 100)
 
-		sprintf(all_orders, orderNumber + customer_order);
+		sprintf(total_order_buffer, orderNumber + customer_order);
 	}
 
 	if (read_size == 0) {
 		//print out the customers order from a buffer
-		printf(all_orders);
+		printf(total_order_buffer);
 
 		printf("Thank you, come again!");
 		fflush(stdout);
