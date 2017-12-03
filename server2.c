@@ -14,6 +14,12 @@
  
 //the thread function
 void *connection_handler(void *);
+
+//struct
+struct order_struct {
+    pthread_t tid;
+    int order_sock;
+};
  
 int main(int argc , char *argv[])
 {
@@ -48,20 +54,24 @@ int main(int argc , char *argv[])
     //Accept and incoming connection
     puts("Waiting for hungry customers...");
     c = sizeof(struct sockaddr_in);
-    pthread_t thread_id;
+    
+    int bytes, thread_num = 0;
+    char client_message[2000];
+    struct order_struct args;
     
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
+        pthread_t thread_id = pthread_self();
         puts("Connection accepted");
+        args.order_sock = client_sock;
+        args.tid = thread_id;
          
-        if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
+        if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &args) < 0)
         {
             perror("could not create thread");
             return 1;
         }
-         
-        //Now join the thread , so that we dont terminate before the thread
-        //pthread_join( thread_id , NULL);
+        
         puts("Handler assigned");
     }
      
@@ -70,21 +80,27 @@ int main(int argc , char *argv[])
         perror("accept failed");
         return 1;
     }
-     
+
     return 0;
 }
  
 /*
  * This will handle connection for each client
  * */
-void *connection_handler(void *socket_desc)
+void *connection_handler(void *arguments)
 {
+
+    struct order_struct *args = arguments;
+    int sock = args->order_sock;
+    int thread = getpid();
+
     //Get the socket descriptor
-    int sock = *(int*)socket_desc;
+    //int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000], *toppings, *invalid;
     char all_orders[5000];
     int order_number = 1;
+    
     
     //toppings = "Topping choices are: banana, apple, granola, strawberry \n"; 
     //write(sock, toppings, strlen(toppings));
@@ -92,6 +108,9 @@ void *connection_handler(void *socket_desc)
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {
+        printf("THREAD LAUNCHED : %d\n", thread);
+        fflush(stdout);
+        
         if(strcmp(client_message, "blueberries\n") == 0){
 
             //end of string marker
@@ -106,9 +125,13 @@ void *connection_handler(void *socket_desc)
             //clear the message buffer
             memset(client_message, 0, 2000);
 
-            sleep(1);
+            sleep(2);
+
+            //print when finished
+            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
         }
         else if(strcmp(client_message, "banana\n") == 0){
+            
             //end of string marker
             client_message[read_size] = '\0';
             
@@ -122,6 +145,9 @@ void *connection_handler(void *socket_desc)
             memset(client_message, 0, 2000);
 
             sleep(1);
+
+            //print when finished
+            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
         }
         else if(strcmp(client_message, "apple\n") == 0){
             //end of string marker
@@ -136,7 +162,10 @@ void *connection_handler(void *socket_desc)
             //clear the message buffer
             memset(client_message, 0, 2000);
 
-            sleep(1);
+            sleep(4);
+
+            //print when finished
+            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
         }
         else if(strcmp(client_message, "granola\n") == 0){
             //end of string marker
@@ -151,7 +180,10 @@ void *connection_handler(void *socket_desc)
             //clear the message buffer
             memset(client_message, 0, 2000);
 
-            sleep(1);
+            sleep(5);
+
+            //print when finished
+            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
         }
         else if(strcmp(client_message, "strawberry\n") == 0){
             //end of string marker
@@ -167,6 +199,9 @@ void *connection_handler(void *socket_desc)
             memset(client_message, 0, 2000);
 
             sleep(1);
+
+            //print when finished
+            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
         }
         else{
             invalid = "That's not an option, next! \n";
@@ -189,5 +224,6 @@ void *connection_handler(void *socket_desc)
         perror("recv failed");
     }
          
+    pthread_exit(NULL); 
     return 0;
 } 
