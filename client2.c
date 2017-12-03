@@ -1,4 +1,4 @@
-//to run : ./client 127.0.0.1 8000
+/* client */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,13 +16,11 @@ void error(const char *msg) {
 }
 
 int main(int argc, char *argv[]) {
-    int sockfd, portnum, order;
+    int r = (rand() % 5) + 1; 
+    int sockfd, portnum, order, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
-    char buffer[BUFFER_SIZE];
-
-    int r = (rand() % 5) + 1;
-
+    char buffer[BUFFER_SIZE], all_orders[5000];
     if (argc < 3) {
        fprintf(stderr,"usage %s hostname port\n", argv[0]);
        exit(0);
@@ -50,7 +48,10 @@ int main(int argc, char *argv[]) {
         error("ERROR connecting");
     
     //Continue placing orders until # of customers is 0
+    printf("Welcome to Jenny and Grace's Lit AF Acai Bowl Shop! \n");
+    printf("Topping choices are: blueberries, banana, apple, granola, strawberry \n");
     for (int i = 0; i < r; i++) {
+        printf("Please choose a topping: ");
         bzero(buffer,BUFFER_SIZE);
         fgets(buffer,BUFFER_SIZE-1,stdin);
         order = write(sockfd,buffer,strlen(buffer));
@@ -61,8 +62,14 @@ int main(int argc, char *argv[]) {
         if (order < 0) 
              error("ERROR reading from socket");
         printf("%s\n",buffer);
+        bzero(buffer, BUFFER_SIZE);
     }
-    
+
+    buffer [n] = '\0';
+    printf("%s\n", buffer);
+
     close(sockfd);
     return 0;
 }
+
+

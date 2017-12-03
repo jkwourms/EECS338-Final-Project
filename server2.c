@@ -1,135 +1,193 @@
-/* server */
-
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/types.h> 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <pthread.h>
-#define BUFFER_SIZE 256
-
-void *chef(void *);
-
-void error(const char *msg) {
-    perror(msg);
-    exit(1);
+/*
+    C socket server example, handles multiple clients using threads
+    Compile
+    gcc server.c -lpthread -o server
+*/
+ 
+#include<stdio.h>
+#include<string.h>    
+#include<stdlib.h>    
+#include<sys/socket.h>
+#include<arpa/inet.h> 
+#include<unistd.h>    
+#include<pthread.h> 
+ 
+//the thread function
+void *connection_handler(void *);
+ 
+int main(int argc , char *argv[])
+{
+    int socket_desc , client_sock , c;
+    struct sockaddr_in server , client;
+     
+    //Create socket
+    socket_desc = socket(AF_INET , SOCK_STREAM , 0);
+    if (socket_desc == -1)
+    {
+        printf("Could not create socket");
+    }
+    puts("Socket created");
+     
+    //Prepare the sockaddr_in structure
+    server.sin_family = AF_INET;
+    server.sin_addr.s_addr = INADDR_ANY;
+    server.sin_port = htons( 8000 );
+     
+    //Bind
+    if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
+    {
+        //print the error message
+        perror("bind failed. Error");
+        return 1;
+    }
+    puts("bind done");
+     
+    //Listen
+    listen(socket_desc , 3);
+     
+    //Accept and incoming connection
+    puts("Waiting for hungry customers...");
+    c = sizeof(struct sockaddr_in);
+    pthread_t thread_id;
+    
+    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    {
+        puts("Connection accepted");
+         
+        if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &client_sock) < 0)
+        {
+            perror("could not create thread");
+            return 1;
+        }
+         
+        //Now join the thread , so that we dont terminate before the thread
+        //pthread_join( thread_id , NULL);
+        puts("Handler assigned");
+    }
+     
+    if (client_sock < 0)
+    {
+        perror("accept failed");
+        return 1;
+    }
+     
+    return 0;
 }
+ 
+/*
+ * This will handle connection for each client
+ * */
+void *connection_handler(void *socket_desc)
+{
+    //Get the socket descriptor
+    int sock = *(int*)socket_desc;
+    int read_size;
+    char *message , client_message[2000], *toppings, *invalid;
+    char all_orders[5000];
+    int order_number = 1;
+    
+    //toppings = "Topping choices are: banana, apple, granola, strawberry \n"; 
+    //write(sock, toppings, strlen(toppings));
+     
+    //Receive a message from client
+    while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
+    {
+        if(strcmp(client_message, "blueberries\n") == 0){
 
-int main(int argc, char *argv[]) {
-	int sockfd, newsockfd, portnum;
-	char buffer[BUFFER_SIZE];
-	char all_orders[BUFFER_SIZE];
-	socklen_t custlen;
-	struct sockaddr_in serv_addr, cust_addr;
-	pthread_t tid;
-	if (argc < 2) {
-		fprintf(stderr, "ERROR: did not provide port number");
-		exit(1);
-	}
+            //end of string marker
+            client_message[read_size] = '\0';
+            
+            //Send the message back to client
+            write(sock , client_message , strlen(client_message));
+            
+            //Write the order and the order number to the buffer
+            sprintf(all_orders + strlen(all_orders), "Order #%d: %s", order_number, client_message);
 
-	//Create Socket
-	sockfd = socket(AF_INET, SOCK_STREAM, 0);
-	if (sockfd < 0)
-		error("ERROR: opening socket");
-	bzero((char *) &serv_addr, sizeof(serv_addr));
-	portnum = atoi(argv[1]);
-	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr = INADDR_ANY;
-	serv_addr.sin_port = htons(portnum);
-	if (bind(sockfd, (struct sockaddr *) &serv_addr, sizeof(serv_addr)) < 0)
-		error("ERROR: binding");
+            //clear the message buffer
+            memset(client_message, 0, 2000);
 
-	//Listen for connection
-	listen(sockfd, 5);
-	custlen = sizeof(cust_addr);
+            sleep(1);
+        }
+        else if(strcmp(client_message, "banana\n") == 0){
+            //end of string marker
+            client_message[read_size] = '\0';
+            
+            //Send the message back to client
+            write(sock , client_message , strlen(client_message));
+            
+            //Write the order and the order number to the buffer
+            sprintf(all_orders + strlen(all_orders), "Order #%d: %s", order_number, client_message);
 
-	//Accept connection
-	while (newsockfd = accept(sockfd, (struct sockaddr *) &cust_addr, &custlen)) {
-		if (pthread_create(&tid, NULL, chef, &newsockfd) < 0)
-			error("ERROR: could not create thread");
-	}
+            //clear the message buffer
+            memset(client_message, 0, 2000);
 
-	//Close sockets & join threads
-	close(newsockfd);
-	close(sockfd);
-	pthread_join(tid, NULL);
-	return 0;
-}
+            sleep(1);
+        }
+        else if(strcmp(client_message, "apple\n") == 0){
+            //end of string marker
+            client_message[read_size] = '\0';
+            
+            //Send the message back to client
+            write(sock , client_message , strlen(client_message));
+            
+            //Write the order and the order number to the buffer
+            sprintf(all_orders + strlen(all_orders), "Order #%d: %s", order_number, client_message);
 
-void *chef(void *sockfd) {
-	char total_order_buffer[BUFFER_SIZE];
+            //clear the message buffer
+            memset(client_message, 0, 2000);
 
-	//Get socket descriptor
-	int orderNumber;
-	int sock = *(int*)sockfd;
-	int read_size;
-	char *order, customer_order[100];
-	const char *toppings[5];
+            sleep(1);
+        }
+        else if(strcmp(client_message, "granola\n") == 0){
+            //end of string marker
+            client_message[read_size] = '\0';
+            
+            //Send the message back to client
+            write(sock , client_message , strlen(client_message));
+            
+            //Write the order and the order number to the buffer
+            sprintf(all_orders + strlen(all_orders), "Order #%d: %s", order_number, client_message);
 
-	//Send message to the customer
-	toppings[0] = "Blueberries";
-	toppings[1] = "Strawberries";
-	toppings[2] = "Granola";
-	toppings[3] = "Coconut shavings";
-	toppings[4] = "Banana";
-	write(sock, toppings, 6);
-	order = "Please choose your toppings: ";
-	write(sock, order, strlen(order));
+            //clear the message buffer
+            memset(client_message, 0, 2000);
 
-	//Receive message from customer
-	while ((read_size = recv(sock, customer_order, 100, 0)) > 0) {
-		//Read for which topping is ordered
-		if (strcmp(customer_order, "Blueberries") == 0) {
-			//add time to chef
-			sleep(3);
-		} 
-		else if (strcmp(customer_order, "Strawberries") == 0){
-			//add time to chef
-			sleep(2);
-		}
-		else if (strcmp(customer_order, "Granola") == 0){
-			//add time to chef
-			sleep(2);
-		}
-		else if (strcmp(customer_order, "Coconut shavings") == 0){
-			//add time to chef
-			sleep(10);
-		}
-		else if (strcmp(customer_order, "Banana") == 0){
-			//add time to chef
-			sleep(5);
-		}
-		else {
-			bzero(total_order_buffer, BUFFER_SIZE);
-			printf("Please list valid ingredients.");
-			fflush(stdout);
-		}
-		
-		orderNumber++;
+            sleep(1);
+        }
+        else if(strcmp(client_message, "strawberry\n") == 0){
+            //end of string marker
+            client_message[read_size] = '\0';
+            
+            //Send the message back to client
+            write(sock , client_message , strlen(client_message));
+            
+            //Write the order and the order number to the buffer
+            sprintf(all_orders + strlen(all_orders), "Order #%d: %s", order_number, client_message);
 
-		//End of string marker
-		customer_order[read_size] = '\0';
+            //clear the message buffer
+            memset(client_message, 0, 2000);
 
-		//Send message back to customer
-		write(sock, orderNumber, strlen(orderNumber));
-		write(sock, customer_order, strlen(customer_order));
-		//Clear message buffer
-		//bzero(buffer, 100)
+            sleep(1);
+        }
+        else{
+            invalid = "That's not an option, next! \n";
+            write(sock, invalid, strlen(invalid));
+            memset(client_message, 0, 2000);
+        }
 
-		sprintf(total_order_buffer, orderNumber + customer_order);
-	}
-
-	if (read_size == 0) {
-		//print out the customers order from a buffer
-		printf(total_order_buffer);
-
-		printf("Thank you, come again!");
-		fflush(stdout);
-	}
-
-   	close(sock);
-	pthread_exit(0);
-
-}
+        order_number++;
+    }
+     
+    if(read_size == 0)
+    {
+        //write(sock, all_orders, strlen(all_orders));
+        printf("%s \n", all_orders);
+        puts("Client disconnected");
+        fflush(stdout);
+    }
+    else if(read_size == -1)
+    {
+        perror("recv failed");
+    }
+         
+    return 0;
+} 
