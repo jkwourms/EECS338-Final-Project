@@ -218,8 +218,8 @@ void *chef(void *arguments)
      
     if(read_size == 0)
     {
-        printf("Customer %d ordered:\n%s \n", customer_number, all_orders);
-        printf("Customer %d left\n", customer_number);
+        printf("\nCustomer %d ordered:\n%s \n", customer_number, all_orders);
+        printf("Customer %d left\n\n", customer_number);
         fflush(stdout);
         //not exiting?
         close(sock);
