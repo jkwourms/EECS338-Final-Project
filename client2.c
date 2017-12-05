@@ -15,23 +15,20 @@ void error(const char *msg) {
     exit(0);
 }
 
-int main(int argc, char *argv[]) {
-    int r = (rand() % 5) + 1; 
+int main() {
+    //int r = (rand() % 5) + 1; 
+    int r = 3;
     int sockfd, portnum, order, n;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFFER_SIZE], all_orders[5000];
-    if (argc < 3) {
-       fprintf(stderr,"usage %s hostname port\n", argv[0]);
-       exit(0);
-    }
 
     //Create socket
-    portnum = atoi(argv[2]);
+    portnum = 8000;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         error("ERROR opening socket");
-    server = gethostbyname(argv[1]);
+    server = gethostbyname("127.0.0.1");
     if (server == NULL) {
         fprintf(stderr,"ERROR, no such host\n");
         exit(0);
@@ -71,5 +68,3 @@ int main(int argc, char *argv[]) {
     close(sockfd);
     return 0;
 }
-
-
