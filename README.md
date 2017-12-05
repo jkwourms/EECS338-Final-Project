@@ -6,8 +6,8 @@ requests) to a server. The server launches a separate thread that's a chef, whil
 prepare each order (different times for different ingredients). When the server finally quits, it prints a log of all the orders."
 
 # Tasks to do
-* Associate a sleep value with each ingredient item in menu option (in server)
-* Server launches a chef thread & sleeps depending on ingredient
+* Need to add a conditional statement to launch NEW thread each time the client submits 
+an order request
 * Print a message back to customer saying their order is ready (print actual menu order name + order #)
 
 # New Tommy advice
