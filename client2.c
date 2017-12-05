@@ -24,7 +24,7 @@ int main() {
     char buffer[BUFFER_SIZE], all_orders[5000];
 
     //Create socket
-    portnum = 8000;
+    portnum = 8888;
     sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) 
         error("ERROR opening socket");
@@ -46,7 +46,7 @@ int main() {
     
     //Continue placing orders until # of customers is 0
     printf("Welcome to Jenny and Grace's Lit AF Acai Bowl Shop! \n");
-    printf("Topping choices are: blueberries, banana, apple, granola, strawberry \n");
+    printf("Topping choices are: blueberries, banana, apple, granola, strawberries \n");
     for (int i = 0; i < r; i++) {
         printf("Please choose a topping: ");
         bzero(buffer,BUFFER_SIZE);
@@ -62,7 +62,6 @@ int main() {
         bzero(buffer, BUFFER_SIZE);
     }
 
-    buffer [n] = '\0';
     printf("%s\n", buffer);
 
     close(sockfd);
