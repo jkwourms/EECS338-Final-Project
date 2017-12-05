@@ -1,8 +1,4 @@
-/*
-    C socket server example, handles multiple clients using threads
-    Compile
-    gcc server.c -lpthread -o server
-*/
+/* server */
  
 #include<stdio.h>
 #include<string.h>    
@@ -17,7 +13,7 @@ void *connection_handler(void *);
 
 //struct
 struct order_struct {
-    pthread_t tid;
+    pthread_t tid[3]; //not assignable?
     int order_sock;
 };
  
@@ -55,22 +51,25 @@ int main(int argc , char *argv[])
     puts("Waiting for hungry customers...");
     c = sizeof(struct sockaddr_in);
     
+    pthread_t thread_id[3]; 
     int bytes, thread_num = 0;
     char client_message[2000];
     struct order_struct args;
     
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
-        pthread_t thread_id = pthread_self();
         puts("Connection accepted");
         args.order_sock = client_sock;
-        args.tid = thread_id;
+        args.tid[thread_num] = thread_id[thread_num];
          
-        if( pthread_create( &thread_id , NULL ,  connection_handler , (void*) &args) < 0)
+        if( pthread_create( &thread_id[thread_num] , NULL ,  connection_handler , (void*) &args) < 0)
         {
             perror("could not create thread");
             return 1;
         }
+        thread_num++;
+        sleep(2); //this is 
+
         
         puts("Handler assigned");
     }
@@ -92,7 +91,7 @@ void *connection_handler(void *arguments)
 
     struct order_struct *args = arguments;
     int sock = args->order_sock;
-    int thread = getpid();
+    int *thread = (int*)args->tid;
 
     //Get the socket descriptor
     //int sock = *(int*)socket_desc;
@@ -100,7 +99,7 @@ void *connection_handler(void *arguments)
     char *message , client_message[2000], *toppings, *invalid;
     char all_orders[5000];
     int order_number = 1;
-    
+    int i = 0;
     
     //toppings = "Topping choices are: banana, apple, granola, strawberry \n"; 
     //write(sock, toppings, strlen(toppings));
@@ -108,7 +107,7 @@ void *connection_handler(void *arguments)
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {
-        printf("THREAD LAUNCHED : %d\n", thread);
+        printf("THREAD LAUNCHED : %d\n", thread[i]);
         fflush(stdout);
         
         if(strcmp(client_message, "blueberries\n") == 0){
@@ -128,7 +127,7 @@ void *connection_handler(void *arguments)
             sleep(2);
 
             //print when finished
-            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
+            printf("Chef #%d has finished preparing order #%d!\n", thread[i], order_number);
         }
         else if(strcmp(client_message, "banana\n") == 0){
             
@@ -147,7 +146,7 @@ void *connection_handler(void *arguments)
             sleep(1);
 
             //print when finished
-            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
+            printf("Chef #%d has finished preparing order #%d!\n", thread[i], order_number);
         }
         else if(strcmp(client_message, "apple\n") == 0){
             //end of string marker
@@ -165,7 +164,7 @@ void *connection_handler(void *arguments)
             sleep(4);
 
             //print when finished
-            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
+            printf("Chef #%d has finished preparing order #%d!\n", thread[i], order_number);
         }
         else if(strcmp(client_message, "granola\n") == 0){
             //end of string marker
@@ -183,7 +182,7 @@ void *connection_handler(void *arguments)
             sleep(5);
 
             //print when finished
-            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
+            printf("Chef #%d has finished preparing order #%d!\n", thread[i], order_number);
         }
         else if(strcmp(client_message, "strawberry\n") == 0){
             //end of string marker
@@ -201,14 +200,14 @@ void *connection_handler(void *arguments)
             sleep(1);
 
             //print when finished
-            printf("Chef #%d has finished preparing order #%d!\n", getpid(), order_number);
+            printf("Chef #%d has finished preparing order #%d!\n", thread[i], order_number);
         }
         else{
             invalid = "That's not an option, next! \n";
             write(sock, invalid, strlen(invalid));
             memset(client_message, 0, 2000);
         }
-
+        i++;
         order_number++;
     }
      
