@@ -17,6 +17,6 @@ I'll work on it again another day, but I'll quote it in case you have time to lo
 
 > I believe the issue may be that you are using two separate thread array to keep track of the number. That is, you are using a thread[i] for your thread function and thread_num[i] for your main function, so they are separate arrays. Also since you make the thread array, you did not specify any numbers so while the index changes, the contents which have been initialized to some random number has not changed. That means the number is off by whatever it has been initialized to when you really should define the numbers in your array or use the index increment as your tid.
 
-Note that when I talk about tid id, it is simply a way to keep track of how many threads and which thread you are on, this is a simple as keeping a tid variable that increments and is applied to each thread. "
+> Note that when I talk about tid id, it is simply a way to keep track of how many threads and which thread you are on, this is a simple as keeping a tid variable that increments and is applied to each thread. "
 
  
