@@ -133,7 +133,7 @@ void *chef(void *arguments)
             sleep(2);
 
             //print when finished
-            printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
+            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "banana\n") == 0){
             
@@ -152,7 +152,7 @@ void *chef(void *arguments)
             sleep(1);
 
             //print when finished
-            printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
+            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "apple\n") == 0){
             //end of string marker
@@ -170,7 +170,7 @@ void *chef(void *arguments)
             sleep(4);
 
             //print when finished
-            printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
+            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "granola\n") == 0){
             //end of string marker
@@ -188,7 +188,7 @@ void *chef(void *arguments)
             sleep(5);
 
             //print when finished
-            printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
+            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "strawberries\n") == 0){
             //end of string marker
@@ -218,8 +218,8 @@ void *chef(void *arguments)
      
     if(read_size == 0)
     {
-        printf("\nCustomer %d ordered:\n%s \n", customer_number, all_orders);
-        printf("Customer %d left\n\n", customer_number);
+        printf("Customer %d ordered:\n%s \n", customer_number, all_orders);
+        printf("Customer %d left\n", customer_number);
         fflush(stdout);
         //not exiting?
         close(sock);
