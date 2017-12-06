@@ -206,7 +206,7 @@ void *chef(void *arguments)
             sleep(1);
 
             //print when finished
-            printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
+            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else{
             invalid = "That's not an option, next! \n";
