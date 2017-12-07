@@ -14,7 +14,7 @@ void *chef(void *);
 
 //struct
 struct order_struct {
-    pthread_t tid[3]; 
+    int tid;
     int order_sock;
     int customer;
 };
@@ -34,12 +34,11 @@ int main(int argc , char *argv[])
     {
         printf("Could not create socket");
     }
-    puts("Socket created");
      
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8888 );
+    server.sin_port = htons( 8000 );
      
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -48,8 +47,7 @@ int main(int argc , char *argv[])
         perror("bind failed. Error");
         return 1;
     }
-    puts("bind done");
-     
+
     //Listen
     listen(socket_desc , 3);
      
@@ -59,10 +57,10 @@ int main(int argc , char *argv[])
     
     while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
     {
-        puts("Connection accepted");
+        //puts("Connection accepted");
         args.customer++;
         args.order_sock = client_sock;
-        args.tid[thread_num] = thread_id[thread_num];
+        args.tid = thread_num + 1;
          
         //needs to be called everytime the client submits a request
         if( pthread_create( &thread_id[thread_num] , NULL ,  chef , (void*) &args) < 0)
@@ -71,11 +69,9 @@ int main(int argc , char *argv[])
             return 1;
         }
         thread_num++;
-        //printf("thread_num : %d\n", thread_num);
-        //sleep(2);
 
         //puts("Chef assigned");
-        printf("Chef assigned to customer %d\n", args.customer);
+        printf("Chef #%d assigned to customer %d\n", args.tid, args.customer);
     }
      
     if (client_sock < 0)
@@ -97,24 +93,19 @@ void *chef(void *arguments)
 
     struct order_struct *args = arguments;
     int sock = args->order_sock;
-    int thread = *(int*)args->tid;
+    //int thread = *(int*)args->tid;
+    int thread = args->tid;
     int customer_number = args->customer;
 
     //Get the socket descriptor
-    //int sock = *(int*)socket_desc;
     int read_size;
     char *message , client_message[2000], *toppings, *invalid;
     char all_orders[5000];
     int order_number = 1;
-    
-    //toppings = "Topping choices are: banana, apple, granola, strawberry \n"; 
-    //write(sock, toppings, strlen(toppings));
-     
+
     //Receive a message from client
     while( (read_size = recv(sock , client_message , 2000 , 0)) > 0 )
     {
-        //printf("THREAD LAUNCHED : %d\n", thread);
-        //fflush(stdout);
         
         if(strcmp(client_message, "blueberries\n") == 0){
 
@@ -125,15 +116,13 @@ void *chef(void *arguments)
             write(sock , client_message , strlen(client_message));
             
             //Write the order and the order number to the buffer
-            sprintf(all_orders + strlen(all_orders), "Ingredient #%d: %s", order_number, client_message);
+            sprintf(all_orders + strlen(all_orders), "   Ingredient #%d: %s", order_number, client_message);
 
             //clear the message buffer
             memset(client_message, 0, 2000);
 
             sleep(2);
 
-            //print when finished
-            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "banana\n") == 0){
             
@@ -144,15 +133,13 @@ void *chef(void *arguments)
             write(sock , client_message , strlen(client_message));
             
             //Write the order and the order number to the buffer
-            sprintf(all_orders + strlen(all_orders), "Ingredient #%d: %s", order_number, client_message);
+            sprintf(all_orders + strlen(all_orders), "   Ingredient #%d: %s", order_number, client_message);
 
             //clear the message buffer
             memset(client_message, 0, 2000);
 
             sleep(1);
 
-            //print when finished
-            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "apple\n") == 0){
             //end of string marker
@@ -162,15 +149,13 @@ void *chef(void *arguments)
             write(sock , client_message , strlen(client_message));
             
             //Write the order and the order number to the buffer
-            sprintf(all_orders + strlen(all_orders), "Ingredient #%d: %s", order_number, client_message);
+            sprintf(all_orders + strlen(all_orders), "   Ingredient #%d: %s", order_number, client_message);
 
             //clear the message buffer
             memset(client_message, 0, 2000);
 
             sleep(4);
 
-            //print when finished
-            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "granola\n") == 0){
             //end of string marker
@@ -180,15 +165,13 @@ void *chef(void *arguments)
             write(sock , client_message , strlen(client_message));
             
             //Write the order and the order number to the buffer
-            sprintf(all_orders + strlen(all_orders), "Ingredient #%d: %s", order_number, client_message);
+            sprintf(all_orders + strlen(all_orders), "   Ingredient #%d: %s", order_number, client_message);
 
             //clear the message buffer
             memset(client_message, 0, 2000);
 
             sleep(5);
 
-            //print when finished
-            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else if(strcmp(client_message, "strawberries\n") == 0){
             //end of string marker
@@ -198,15 +181,13 @@ void *chef(void *arguments)
             write(sock , client_message , strlen(client_message));
             
             //Write the order and the order number to the buffer
-            sprintf(all_orders + strlen(all_orders), "Ingredient #%d: %s", order_number, client_message);
+            sprintf(all_orders + strlen(all_orders), "   Ingredient #%d: %s", order_number, client_message);
 
             //clear the message buffer
             memset(client_message, 0, 2000);
 
             sleep(1);
 
-            //print when finished
-            //printf("Chef #%d has finished preparing ingredient #%d for customer %d\n", thread, order_number, customer_number);
         }
         else{
             invalid = "That's not an option, next! \n";
@@ -218,7 +199,7 @@ void *chef(void *arguments)
      
     if(read_size == 0)
     {
-        printf("Customer %d ordered:\n%s \n", customer_number, all_orders);
+        printf("Chef #%d has finished customer %d's order of:\n%s \n", thread, customer_number, all_orders);
         printf("Customer %d left\n", customer_number);
         fflush(stdout);
         //not exiting?
