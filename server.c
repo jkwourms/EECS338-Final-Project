@@ -27,6 +27,9 @@ int main(int argc , char *argv[])
     int thread_num = 0;
     char client_message[2000];
     struct order_struct args;
+
+    int client_number;
+    int max_clients = 5;
      
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
@@ -38,7 +41,7 @@ int main(int argc , char *argv[])
     //Prepare the sockaddr_in structure
     server.sin_family = AF_INET;
     server.sin_addr.s_addr = INADDR_ANY;
-    server.sin_port = htons( 8000 );
+    server.sin_port = htons( 8888 );
      
     //Bind
     if( bind(socket_desc,(struct sockaddr *)&server , sizeof(server)) < 0)
@@ -54,9 +57,13 @@ int main(int argc , char *argv[])
     //Accept and incoming connection
     puts("Waiting for hungry customers...");
     c = sizeof(struct sockaddr_in);
+
+   
     
-    while( (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) )
+    while(client_number < max_clients)
     {
+        client_number++;
+        (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c));
         //puts("Connection accepted");
         args.customer++;
         args.order_sock = client_sock;
@@ -72,6 +79,8 @@ int main(int argc , char *argv[])
 
         //puts("Chef assigned");
         printf("Chef #%d assigned to customer %d\n", args.tid, args.customer);
+
+        client_number++;
     }
      
     if (client_sock < 0)
@@ -80,7 +89,12 @@ int main(int argc , char *argv[])
         return 1;
     }
 
-    close(client_sock);
+
+    
+    printf("Restaurant is closed now! \n");
+    
+    shutdown(client_sock, SHUT_WR);
+    //close(client_sock);
 
     return 0;
 }
