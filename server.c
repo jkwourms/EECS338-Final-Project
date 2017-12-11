@@ -11,7 +11,6 @@
 //the thread function
 void *chef(void *);
 
-
 //struct
 struct order_struct {
     int tid;
@@ -21,16 +20,14 @@ struct order_struct {
  
 int main(int argc , char *argv[])
 {
+    time_t start = 0;
     int socket_desc , client_sock , c;
     struct sockaddr_in server , client;
     pthread_t thread_id[3]; 
     int thread_num = 0;
     char client_message[2000];
     struct order_struct args;
-
-    int client_number;
-    int max_clients = 5;
-     
+ 
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
     if (socket_desc == -1)
@@ -57,12 +54,10 @@ int main(int argc , char *argv[])
     //Accept and incoming connection
     puts("Waiting for hungry customers...");
     c = sizeof(struct sockaddr_in);
-
-   
+    start = time(NULL);
     
-    while(client_number < max_clients)
+    while(time(NULL) - start < 30)
     {
-        client_number++;
         (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c));
         //puts("Connection accepted");
         args.customer++;
@@ -80,7 +75,6 @@ int main(int argc , char *argv[])
         //puts("Chef assigned");
         printf("Chef #%d assigned to customer %d\n", args.tid, args.customer);
 
-        client_number++;
     }
      
     if (client_sock < 0)
