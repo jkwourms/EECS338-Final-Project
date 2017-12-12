@@ -89,7 +89,7 @@ int main(int argc , char *argv[])
         }
 
         else{
-            printf("Restaurant is closed now! \n");
+            printf("Sorry, the kitchen is closing! \n");
             
             //Tell the client that the restaurant is closed
             sprintf(buffer, "closed");
