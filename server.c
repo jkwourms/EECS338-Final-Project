@@ -12,6 +12,7 @@
 
 //Global variables
 int max_customers = 2;
+int client_sock;
 
 //the thread function
 void *chef(void *);
@@ -64,6 +65,8 @@ int main(int argc , char *argv[])
     
     args.customer = 0;
 
+
+
     while((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)))
     {
         if(customer_amount < max_customers){
@@ -87,9 +90,8 @@ int main(int argc , char *argv[])
             //puts("Chef assigned");
             printf("Chef #%d assigned to customer %d\n", args.tid, args.customer);
         }
-        //if no more customers left then break out of accepting
         else if(max_customers == 0){
-            printf("Restaurant closed!\n")
+            printf("Restaraurant closed! \n");
             break;
         }
         else{
@@ -101,6 +103,9 @@ int main(int argc , char *argv[])
         }
 
     }
+    
+
+    printf("Restaurant closed!\n");
        
     if (client_sock < 0)
     {
@@ -225,6 +230,11 @@ void *chef(void *arguments)
         printf("Chef #%d has finished customer %d's order of:\n%s \n", thread, customer_number, all_orders);
         printf("Customer %d left\n", customer_number);
         max_customers--;
+        if(max_customers == 0){
+            execvp("./client",args);
+            exit(127);
+            return 0;
+        }
         fflush(stdout);
         pthread_exit(0);
     }
