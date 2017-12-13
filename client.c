@@ -16,9 +16,8 @@ void error(const char *msg) {
 }
 
 int main() {
-    //int r = (rand() % 5) + 1; 
     int r = 3;
-    int sockfd, portnum, order, n;
+    int sockfd, portnum, order, n, closed;
     struct sockaddr_in serv_addr;
     struct hostent *server;
     char buffer[BUFFER_SIZE], all_orders[5000];
@@ -44,22 +43,33 @@ int main() {
     if (connect(sockfd,(struct sockaddr *) &serv_addr,sizeof(serv_addr)) < 0) 
         error("ERROR connecting");
     
-    //Continue placing orders until # of customers is 0
-    printf("Welcome to Jenny and Grace's Lit AF Acai Bowl Shop! \n");
-    printf("Topping choices are: blueberries, banana, apple, granola, strawberries \n");
-    for (int i = 0; i < r; i++) {
-        printf("Please choose a topping: ");
-        bzero(buffer,BUFFER_SIZE);
-        fgets(buffer,BUFFER_SIZE-1,stdin);
-        order = write(sockfd,buffer,strlen(buffer));
-        if (order < 0) 
-             error("ERROR writing to socket");
-        bzero(buffer,BUFFER_SIZE);
-        order = read(sockfd,buffer,BUFFER_SIZE-1);
-        if (order < 0) 
-             error("ERROR reading from socket");
-        printf("%s\n",buffer);
+    //Check if server sent message to client
+    closed = recv(sockfd, buffer, 1024, 0);
+    //Check if restaurant is closed
+    if(strcmp(buffer, "closed") == 0){
+        //read the message from the server into the buffer
         bzero(buffer, BUFFER_SIZE);
+        printf("Restaurant is closed! \n");
+        close(sockfd);
+    }
+    else{
+        //Continue placing orders until # of customers is 0
+        printf("Welcome to Jenny and Grace's Lit AF Acai Bowl Shop! \n");
+        printf("Topping choices are: blueberries, banana, apple, granola, strawberries \n");
+        for (int i = 0; i < r; i++) {
+            printf("Please choose a topping: ");
+            bzero(buffer,BUFFER_SIZE);
+            fgets(buffer,BUFFER_SIZE-1,stdin);
+            order = write(sockfd,buffer,strlen(buffer));
+            if (order < 0) 
+                 error("ERROR writing to socket");
+            bzero(buffer,BUFFER_SIZE);
+            order = read(sockfd,buffer,BUFFER_SIZE-1);
+            if (order < 0) 
+                 error("ERROR reading from socket");
+            printf("%s\n",buffer);
+            bzero(buffer, BUFFER_SIZE);
+        }
     }
 
     printf("%s\n", buffer);
