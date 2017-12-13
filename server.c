@@ -90,10 +90,6 @@ int main(int argc , char *argv[])
             //puts("Chef assigned");
             printf("Chef #%d assigned to customer %d\n", args.tid, args.customer);
         }
-        else if(max_customers == 0){
-            printf("Restaraurant closed! \n");
-            break;
-        }
         else{
             //Tell the client that the restaurant is closed
             printf("Sorry, the kitchen is closing! \n");
@@ -231,8 +227,7 @@ void *chef(void *arguments)
         printf("Customer %d left\n", customer_number);
         max_customers--;
         if(max_customers == 0){
-            execvp("./client",args);
-            exit(127);
+            exit(0);
             return 0;
         }
         fflush(stdout);
