@@ -7,6 +7,7 @@
 #include<arpa/inet.h> 
 #include<unistd.h>    
 #include<pthread.h> 
+#define BUFFER_SIZE 100
  
 //the thread function
 void *chef(void *);
@@ -20,13 +21,16 @@ struct order_struct {
  
 int main(int argc , char *argv[])
 {
-    time_t start = 0;
     int socket_desc , client_sock , c;
     struct sockaddr_in server , client;
     pthread_t thread_id[3]; 
     int thread_num = 0;
     char client_message[2000];
+    char closed[2000] = "closed";
     struct order_struct args;
+    int customer_amount = 0;
+    int max_customers = 2;
+    char buffer[BUFFER_SIZE];
  
     //Create socket
     socket_desc = socket(AF_INET , SOCK_STREAM , 0);
@@ -54,16 +58,20 @@ int main(int argc , char *argv[])
     //Accept and incoming connection
     puts("Waiting for hungry customers...");
     c = sizeof(struct sockaddr_in);
-    start = time(NULL);
     
-    while(time(NULL) - start < 30)
+    args.customer = 0;
+
+    while((client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c)) && customer_amount < max_customers)
     {
-        (client_sock = accept(socket_desc, (struct sockaddr *)&client, (socklen_t*)&c));
-        //puts("Connection accepted");
+        sprintf(buffer, "open");
+        send(client_sock,buffer,13,0);
+        bzero(buffer, BUFFER_SIZE);
+
+        customer_amount++;
         args.customer++;
         args.order_sock = client_sock;
         args.tid = thread_num + 1;
-         
+
         //needs to be called everytime the client submits a request
         if( pthread_create( &thread_id[thread_num] , NULL ,  chef , (void*) &args) < 0)
         {
@@ -76,20 +84,19 @@ int main(int argc , char *argv[])
         printf("Chef #%d assigned to customer %d\n", args.tid, args.customer);
 
     }
+
+    //Tell the client that the restaurant is closed
+    printf("Sorry, the kitchen is closing! \n");
+    sprintf(buffer, "closed");
+    send(client_sock,buffer,13,0);
+    shutdown(client_sock, SHUT_WR);
+    
      
     if (client_sock < 0)
     {
         perror("accept failed");
         return 1;
     }
-
-
-    
-    printf("Restaurant is closed now! \n");
-    
-    shutdown(client_sock, SHUT_WR);
-    //close(client_sock);
-
     return 0;
 }
  
@@ -98,10 +105,8 @@ int main(int argc , char *argv[])
  * */
 void *chef(void *arguments)
 {
-
     struct order_struct *args = arguments;
     int sock = args->order_sock;
-    //int thread = *(int*)args->tid;
     int thread = args->tid;
     int customer_number = args->customer;
 
@@ -210,10 +215,7 @@ void *chef(void *arguments)
         printf("Chef #%d has finished customer %d's order of:\n%s \n", thread, customer_number, all_orders);
         printf("Customer %d left\n", customer_number);
         fflush(stdout);
-        //not exiting?
-        close(sock);
         pthread_exit(0);
-        return 0;
     }
     else if(read_size == -1)
     {
